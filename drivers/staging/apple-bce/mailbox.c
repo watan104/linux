@@ -121,7 +121,7 @@ void bce_timestamp_stop(struct bce_timestamp *ts)
     spin_lock_irqsave(&ts->stop_sl, flags);
     ts->stopped = true;
     spin_unlock_irqrestore(&ts->stop_sl, flags);
-    del_timer_sync(&ts->timer);
+    timer_delete_sync(&ts->timer);
 
     iowrite32((u32) -2, regb + 2);
     iowrite32((u32) -1, regb);
