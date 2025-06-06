@@ -78,7 +78,7 @@ EXPORT_SYMBOL_GPL(init_user_ns);
 #define UIDHASH_BITS	(CONFIG_BASE_SMALL ? 3 : 7)
 #define UIDHASH_SZ	(1 << UIDHASH_BITS)
 #define UIDHASH_MASK		(UIDHASH_SZ - 1)
-#define __uidhashfn(uid)	(((uid >> UIDHASH_BITS) + uid) & UIDHASH_MASK)
+#define __uidhashfn(uid)	((((uid) * 2654435761U) >> (32 - UIDHASH_BITS)) & UIDHASH_MASK)
 #define uidhashentry(uid)	(uidhash_table + __uidhashfn((__kuid_val(uid))))
 
 static struct kmem_cache *uid_cachep;
@@ -179,10 +179,10 @@ void free_uid(struct user_struct *up)
 {
 	unsigned long flags;
 
-	if (!up)
+	if (unlikely(!up))
 		return;
 
-	if (refcount_dec_and_lock_irqsave(&up->__count, &uidhash_lock, &flags))
+	if (unlikely(refcount_dec_and_lock_irqsave(&up->__count, &uidhash_lock, &flags)))
 		free_user(up, flags);
 }
 
